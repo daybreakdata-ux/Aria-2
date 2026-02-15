@@ -3,11 +3,10 @@ class ChatApp {
         this.messagesContainer = document.getElementById('messages');
         this.messageInput = document.getElementById('messageInput');
         this.sendBtn = document.getElementById('sendBtn');
-        this.conversationHistory = []; // Messages sent to AI with roles
+        this.chatHistory = [];
+        this.conversationHistory = []; // For API context
         this.isLoading = false;
-        this.apiUrl = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000/api/chat' 
-            : '/api/chat';
+        this.apiEndpoint = '/api/chat';
 
         this.init();
     }
@@ -41,7 +40,7 @@ class ChatApp {
         this.messageInput.focus();
     }
 
-    sendMessage() {
+    async sendMessage() {
         const message = this.messageInput.value.trim();
         if (!message || this.isLoading) return;
 
@@ -54,12 +53,21 @@ class ChatApp {
 
         // Add user message
         this.addMessage(message, 'user');
+        
+        // Add to conversation history for context
+        this.conversationHistory.push({
+            role: 'user',
+            content: message
+        });
+
         this.messageInput.value = '';
+        this.messageInput.disabled = true;
+        this.sendBtn.disabled = true;
         this.messageInput.focus();
 
-        // Simulate AI response
+        // Show typing indicator and get AI response
         this.showTypingIndicator();
-        setTimeout(() => this.generateAIResponse(message), 800);
+        await this.getAIResponse(message);
     }
 
     addMessage(text, sender) {
@@ -108,53 +116,57 @@ class ChatApp {
             indicator.parentElement.parentElement.remove();
         }
         this.isLoading = false;
+        this.messageInput.disabled = false;
+        this.sendBtn.disabled = false;
     }
 
-    async generateAIResponse(userMessage) {
+    async getAIResponse(userMessage) {
         try {
-            // Add user message to conversation history
-            this.conversationHistory.push({
-                role: 'user',
-                content: userMessage
-            });
-
-            // Remove typing indicator and call API
-            this.removeTypingIndicator();
-
-            // Call the backend API
-            const response = await fetch(this.apiUrl, {
+            const response = await fetch(this.apiEndpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    messages: this.conversationHistory
+                    message: userMessage,
+                    history: this.conversationHistory.slice(0, -1) // All messages except the last one we just added
                 })
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `API error: ${response.status}`);
+                throw new Error(`API error: ${response.status}`);
             }
 
             const data = await response.json();
-            const assistantMessage = data.content;
+            
+            // Remove typing indicator
+            this.removeTypingIndicator();
 
-            // Add assistant message to conversation history
-            this.conversationHistory.push({
-                role: 'assistant',
-                content: assistantMessage
-            });
+            if (data.success && data.message) {
+                // Add AI response to conversation history
+                this.conversationHistory.push({
+                    role: 'assistant',
+                    content: data.message
+                });
 
-            // Display response with typewriter effect
-            this.addMessageWithTypewriter(assistantMessage, 'assistant');
+                // Display with typewriter effect
+                this.addMessageWithTypewriter(data.message, 'assistant');
+            } else {
+                throw new Error(data.error || 'Failed to get response');
+            }
+
         } catch (error) {
-            console.error('Chat error:', error);
+            console.error('Error getting AI response:', error);
             this.removeTypingIndicator();
             
-            // Display error message to user
-            const errorMessage = `Sorry, I encountered an error: ${error.message}. Please try again.`;
+            const errorMessage = "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
             this.addMessage(errorMessage, 'assistant');
+            
+            // Add error to history so conversation can continue
+            this.conversationHistory.push({
+                role: 'assistant',
+                content: errorMessage
+            });
         }
     }
 
@@ -230,7 +242,8 @@ class ChatApp {
 
         this.messageInput.value = '';
         this.messageInput.focus();
-        this.conversationHistory = []; // Clear conversation history
+        this.chatHistory = [];
+        this.conversationHistory = []; // Clear API conversation history
     }
 }
 

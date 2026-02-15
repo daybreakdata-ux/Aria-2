@@ -1,23 +1,12 @@
 import Groq from 'groq-sdk';
 
-// Initialize Groq client
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
 });
 
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
-
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
@@ -31,7 +20,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Build messages array with chat history
     const messages = [
       {
         role: 'system',
@@ -45,9 +33,9 @@ export default async function handler(req, res) {
 
 Keep responses friendly, professional, and formatted with proper markdown when appropriate. Use bullet points and code examples when helpful.`
       },
-      ...history.map(msg => ({
-        role: msg.role,
-        content: msg.content
+      ...history.map((chatMessage) => ({
+        role: chatMessage.role,
+        content: chatMessage.content
       })),
       {
         role: 'user',
@@ -55,9 +43,8 @@ Keep responses friendly, professional, and formatted with proper markdown when a
       }
     ];
 
-    // Call Groq API
     const completion = await groq.chat.completions.create({
-      messages: messages,
+      messages,
       model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
       temperature: 0.7,
       max_tokens: 2048,
@@ -73,10 +60,7 @@ Keep responses friendly, professional, and formatted with proper markdown when a
       model: completion.model,
       usage: completion.usage
     });
-
   } catch (error) {
-    console.error('Error calling Groq API:', error);
-    
     return res.status(500).json({
       success: false,
       error: 'Failed to generate response',
