@@ -8,6 +8,7 @@ export default function ChatInterface() {
   const [theme, setTheme] = useState('dark');
   const messagesEndRef = useRef(null);
   const lottieRef = useRef(null);
+  const streamIntervalRef = useRef(null);
 
   useEffect(() => {
     const storedTheme = window.localStorage.getItem('aria-theme');
@@ -52,6 +53,14 @@ export default function ChatInterface() {
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (streamIntervalRef.current) {
+        window.clearInterval(streamIntervalRef.current);
+      }
+    };
+  }, []);
+
   const conversationHistory = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.content })),
     [messages]
@@ -85,7 +94,7 @@ export default function ChatInterface() {
       const data = await response.json();
       const assistantMessage = data?.message || "I apologize, but I couldn't generate a response.";
 
-      setMessages((current) => [...current, { role: 'assistant', content: assistantMessage }]);
+      startStreaming(assistantMessage);
     } catch (error) {
       setMessages((current) => [
         ...current,
@@ -99,6 +108,44 @@ export default function ChatInterface() {
     }
   };
 
+  const startStreaming = (fullText) => {
+    if (streamIntervalRef.current) {
+      window.clearInterval(streamIntervalRef.current);
+    }
+
+    setMessages((current) => [...current, { role: 'assistant', content: '', isStreaming: true }]);
+    let charIndex = 0;
+
+    streamIntervalRef.current = window.setInterval(() => {
+      charIndex = Math.min(charIndex + 1, fullText.length);
+      setMessages((current) => {
+        const next = [...current];
+        const lastIndex = next.length - 1;
+        if (lastIndex < 0) {
+          return current;
+        }
+
+        const lastMessage = next[lastIndex];
+        if (lastMessage.role !== 'assistant' || !lastMessage.isStreaming) {
+          return current;
+        }
+
+        next[lastIndex] = {
+          ...lastMessage,
+          content: fullText.slice(0, charIndex),
+          isStreaming: charIndex < fullText.length
+        };
+
+        return next;
+      });
+
+      if (charIndex >= fullText.length) {
+        window.clearInterval(streamIntervalRef.current);
+        streamIntervalRef.current = null;
+      }
+    }, 20);
+  };
+
   const onSubmit = async (event) => {
     event.preventDefault();
     await sendMessage();
@@ -107,6 +154,11 @@ export default function ChatInterface() {
   const startNewChat = () => {
     if (isLoading) {
       return;
+    }
+
+    if (streamIntervalRef.current) {
+      window.clearInterval(streamIntervalRef.current);
+      streamIntervalRef.current = null;
     }
 
     setMessages([]);
@@ -422,12 +474,18 @@ export default function ChatInterface() {
             {messages.map((message, index) => (
               <div
                 key={`${message.role}-${index}`}
-                className={`message-row ${message.role === 'user' ? 'user' : 'assistant'}`}
+                className={`message-row ${message.role === 'user' ? 'user' : 'assistant'}${message.isStreaming ? ' streaming' : ''}`}
               >
                 <div className="message-bubble">
                   <span className="message-role">{message.role === 'user' ? 'You' : 'Aria-X'}</span>
-                  <div className="message-content">{renderMarkdown(message.content)}</div>
+                  <div className="message-content">
+                    {renderMarkdown(message.content)}
+                    {message.isStreaming && <span className="stream-caret" aria-hidden="true" />}
+                  </div>
                   {message.role === 'assistant' && (() => {
+                    if (message.isStreaming) {
+                      return null;
+                    }
                     const codeBlocks = extractCodeBlocks(message.content);
                     const imageUrls = extractImageUrls(message.content);
                     const timestamp = formatTimestamp();

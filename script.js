@@ -180,7 +180,16 @@ class ChatApp {
 
         const content = document.createElement('div');
         content.className = 'message-content';
-        content.textContent = '';
+        const textNode = document.createTextNode('');
+        content.appendChild(textNode);
+
+        let caret = null;
+        if (sender === 'assistant') {
+            messageDiv.classList.add('streaming');
+            caret = document.createElement('span');
+            caret.className = 'stream-caret';
+            content.appendChild(caret);
+        }
 
         messageDiv.appendChild(avatar);
         messageDiv.appendChild(content);
@@ -190,11 +199,15 @@ class ChatApp {
         let charIndex = 0;
         const typeInterval = setInterval(() => {
             if (charIndex < text.length) {
-                content.textContent += text[charIndex];
+                textNode.nodeValue += text[charIndex];
                 charIndex++;
                 this.scrollToBottom();
             } else {
                 clearInterval(typeInterval);
+                if (caret) {
+                    caret.remove();
+                }
+                messageDiv.classList.remove('streaming');
             }
         }, 20);
     }
