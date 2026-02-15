@@ -7,6 +7,8 @@ export default function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [theme, setTheme] = useState('dark');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobilePortrait, setIsMobilePortrait] = useState(false);
   const messagesEndRef = useRef(null);
   const lottieRef = useRef(null);
   const streamIntervalRef = useRef(null);
@@ -26,6 +28,35 @@ export default function ChatInterface() {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem('aria-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      return undefined;
+    }
+
+    const media = window.matchMedia('(max-width: 960px) and (orientation: portrait)');
+
+    const syncLayout = () => {
+      setIsMobilePortrait(media.matches);
+      setIsSidebarOpen(!media.matches);
+    };
+
+    syncLayout();
+
+    if (media.addEventListener) {
+      media.addEventListener('change', syncLayout);
+    } else {
+      media.addListener(syncLayout);
+    }
+
+    return () => {
+      if (media.removeEventListener) {
+        media.removeEventListener('change', syncLayout);
+      } else {
+        media.removeListener(syncLayout);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const storedChats = window.localStorage.getItem('aria-chats');
@@ -318,6 +349,9 @@ export default function ChatInterface() {
     }
   };
 
+  const toggleSidebar = () => setIsSidebarOpen((current) => !current);
+  const closeSidebar = () => setIsSidebarOpen(false);
+
   const extractCodeBlocks = (content) => {
     const codeBlocks = [];
     const regex = /```(\w+)?\n([\s\S]*?)```/g;
@@ -570,8 +604,10 @@ export default function ChatInterface() {
 
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
+    <div
+      className={`app-shell ${isSidebarOpen ? 'sidebar-open' : 'sidebar-collapsed'}${isMobilePortrait ? ' mobile-portrait' : ''}`}
+    >
+      <aside className="sidebar" id="sidebar" aria-hidden={isMobilePortrait && !isSidebarOpen}>
         <div className="sidebar-header">
           <div className="brand">
             <span className="brand-mark">Aria-X</span>
@@ -587,7 +623,7 @@ export default function ChatInterface() {
             <span className="theme-switch-thumb" />
           </button>
         </div>
-          <button className="primary-action" type="button" onClick={startNewChat}>
+        <button className="primary-action" type="button" onClick={startNewChat}>
           <span className="action-icon">+</span>
           New chat
         </button>
@@ -608,6 +644,9 @@ export default function ChatInterface() {
                 }
                 setIsLoading(false);
                 setActiveChatId(chat.id);
+                if (isMobilePortrait) {
+                  setIsSidebarOpen(false);
+                }
               }}
             >
               <span className="chat-title">{chat.title}</span>
@@ -622,7 +661,41 @@ export default function ChatInterface() {
         </div>
       </aside>
 
+      {isMobilePortrait && isSidebarOpen && (
+        <button
+          className="sidebar-overlay"
+          type="button"
+          onClick={closeSidebar}
+          aria-label="Close sidebar"
+        />
+      )}
+
       <section className="content">
+        <header className="topbar">
+          <div className="topbar-title-group">
+            <span className="topbar-title">Aria-X</span>
+            <span className="topbar-subtitle">Creative AI assistant</span>
+          </div>
+          <div className="topbar-actions">
+            <button
+              className="icon-button menu-toggle"
+              type="button"
+              onClick={toggleSidebar}
+              aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
+              aria-controls="sidebar"
+              aria-expanded={isSidebarOpen}
+            >
+              <span className="icon-lines" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </span>
+            </button>
+            <button className="icon-button" type="button" onClick={startNewChat} aria-label="New chat">
+              <span className="action-icon">+</span>
+            </button>
+          </div>
+        </header>
         <main className="chat-area">
           {messages.length === 0 && (
             <div className="hero">

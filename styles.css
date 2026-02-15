@@ -350,6 +350,47 @@ html[data-theme="light"] .theme-switch-thumb {
     gap: 12px;
 }
 
+.topbar-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.icon-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(18, 22, 33, 0.7);
+    color: var(--text-primary);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, border 0.2s ease, background 0.2s ease;
+}
+
+.icon-button:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    background: rgba(18, 22, 33, 0.9);
+}
+
+.menu-toggle {
+    display: none;
+}
+
+.icon-lines {
+    display: grid;
+    gap: 4px;
+}
+
+.icon-lines span {
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
 .chat-area {
     flex: 1;
     overflow-y: auto;
@@ -847,6 +888,14 @@ html[data-theme="light"] .composer-input {
     margin-top: 6px;
 }
 
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 8, 12, 0.45);
+    border: none;
+    z-index: 11;
+}
+
 @media (max-width: 720px) {
     .hero {
         align-items: center;
@@ -883,12 +932,36 @@ html[data-theme="light"] .composer-input {
     50% { text-shadow: 0 0 16px rgba(124, 108, 255, 0.35); }
 }
 
-@media (max-width: 960px) {
+@media (max-width: 960px) and (orientation: landscape) {
     body { overflow: hidden; }
     .app-shell { flex-direction: column; height: 100vh; min-height: 100vh; }
     .container { flex-direction: column; height: 100vh; min-height: 100vh; }
     .sidebar { width: 100%; flex-direction: row; align-items: center; justify-content: space-between; box-shadow: none; }
     .sidebar-section, .sidebar-footer { display: none; }
+    .content { padding: 20px 16px 24px; }
+    .message-bubble { max-width: 100%; }
+}
+
+@media (max-width: 960px) and (orientation: portrait) {
+    body { overflow: hidden; }
+    .app-shell { position: relative; }
+    .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: min(320px, 85vw);
+        height: 100dvh;
+        transform: translateX(-105%);
+        transition: transform 0.25s ease, opacity 0.25s ease;
+        opacity: 0;
+        z-index: 12;
+    }
+    .app-shell.sidebar-open .sidebar {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    .menu-toggle {
+        display: grid;
+    }
     .content { padding: 20px 16px 24px; }
     .message-bubble { max-width: 100%; }
 }
