@@ -72,7 +72,10 @@ export default function ChatInterface() {
       return;
     }
 
-    const nextMessages = [...messages, { role: 'user', content: message }];
+    const nextMessages = [
+      ...messages,
+      { role: 'user', content: message, timestamp: new Date().toISOString() }
+    ];
     setMessages(nextMessages);
     setInput('');
     setIsLoading(true);
@@ -100,7 +103,8 @@ export default function ChatInterface() {
         ...current,
         {
           role: 'assistant',
-          content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment."
+          content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
+          timestamp: new Date().toISOString()
         }
       ]);
     } finally {
@@ -113,7 +117,16 @@ export default function ChatInterface() {
       window.clearInterval(streamIntervalRef.current);
     }
 
-    setMessages((current) => [...current, { role: 'assistant', content: '', isStreaming: true }]);
+    setMessages((current) => [
+      ...current,
+      {
+        role: 'assistant',
+        content: '',
+        fullContent: fullText,
+        isStreaming: true,
+        timestamp: new Date().toISOString()
+      }
+    ]);
     let charIndex = 0;
 
     streamIntervalRef.current = window.setInterval(() => {
@@ -145,6 +158,30 @@ export default function ChatInterface() {
       }
     }, 20);
   };
+
+  const skipStreaming = () => {
+    if (streamIntervalRef.current) {
+      window.clearInterval(streamIntervalRef.current);
+      streamIntervalRef.current = null;
+    }
+
+    setMessages((current) => {
+      const next = [...current];
+      for (let index = next.length - 1; index >= 0; index -= 1) {
+        const message = next[index];
+        if (message?.isStreaming) {
+          next[index] = {
+            ...message,
+            content: message.fullContent || message.content,
+            isStreaming: false
+          };
+          break;
+        }
+      }
+      return next;
+    });
+  };
+
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -422,6 +459,7 @@ export default function ChatInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -482,6 +520,14 @@ export default function ChatInterface() {
                     {renderMarkdown(message.content)}
                     {message.isStreaming && <span className="stream-caret" aria-hidden="true" />}
                   </div>
+                  {message.isStreaming && (
+                    <button className="stream-skip" type="button" onClick={skipStreaming} aria-label="Skip animation">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="5 4 15 12 5 20"></polyline>
+                        <line x1="19" y1="5" x2="19" y2="19"></line>
+                      </svg>
+                    </button>
+                  )}
                   {message.role === 'assistant' && (() => {
                     if (message.isStreaming) {
                       return null;

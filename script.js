@@ -82,8 +82,13 @@ class ChatApp {
         content.className = 'message-content';
         content.textContent = text;
 
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.appendChild(content);
+
+
         messageDiv.appendChild(avatar);
-        messageDiv.appendChild(content);
+        messageDiv.appendChild(bubble);
 
         this.messagesContainer.appendChild(messageDiv);
         this.scrollToBottom();
@@ -103,8 +108,12 @@ class ChatApp {
         indicator.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
         indicator.id = 'typing-indicator';
 
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.appendChild(indicator);
+
         messageDiv.appendChild(avatar);
-        messageDiv.appendChild(indicator);
+        messageDiv.appendChild(bubble);
 
         this.messagesContainer.appendChild(messageDiv);
         this.scrollToBottom();
@@ -183,34 +192,72 @@ class ChatApp {
         const textNode = document.createTextNode('');
         content.appendChild(textNode);
 
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+
         let caret = null;
+        let skipButton = null;
         if (sender === 'assistant') {
             messageDiv.classList.add('streaming');
             caret = document.createElement('span');
             caret.className = 'stream-caret';
             content.appendChild(caret);
+
+            skipButton = document.createElement('button');
+            skipButton.type = 'button';
+            skipButton.className = 'stream-skip';
+            skipButton.setAttribute('aria-label', 'Skip animation');
+            skipButton.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="5 4 15 12 5 20"></polyline>
+                    <line x1="19" y1="5" x2="19" y2="19"></line>
+                </svg>
+            `;
+        }
+
+        bubble.appendChild(content);
+        if (skipButton) {
+            bubble.appendChild(skipButton);
         }
 
         messageDiv.appendChild(avatar);
-        messageDiv.appendChild(content);
+        messageDiv.appendChild(bubble);
         this.messagesContainer.appendChild(messageDiv);
 
         // Typewriter effect
         let charIndex = 0;
-        const typeInterval = setInterval(() => {
+        let typeInterval = null;
+
+        const finishStreaming = () => {
+            if (typeInterval) {
+                clearInterval(typeInterval);
+            }
+            textNode.nodeValue = text;
+            if (caret) {
+                caret.remove();
+            }
+            if (skipButton) {
+                skipButton.remove();
+            }
+            messageDiv.classList.remove('streaming');
+            this.scrollToBottom();
+        };
+
+        if (skipButton) {
+            skipButton.addEventListener('click', finishStreaming);
+        }
+
+        typeInterval = setInterval(() => {
             if (charIndex < text.length) {
                 textNode.nodeValue += text[charIndex];
                 charIndex++;
                 this.scrollToBottom();
             } else {
-                clearInterval(typeInterval);
-                if (caret) {
-                    caret.remove();
-                }
-                messageDiv.classList.remove('streaming');
+                finishStreaming();
             }
         }, 20);
     }
+
 
     scrollToBottom() {
         this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
