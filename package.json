@@ -1,0 +1,24 @@
+{
+  "name": "aria-chat",
+  "version": "1.0.0",
+  "description": "Modern AI chat UI with Groq API backend",
+  "main": "api/chat.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "groq-sdk": "latest",
+    "dotenv": "^16.0.3"
+  },
+  "keywords": [
+    "ai",
+    "chat",
+    "groq"
+  ],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aria - AI Chat</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <button class="new-chat-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    New Chat
+                </button>
+            </div>
+            <nav class="chat-history">
+                <div class="chat-item active">
+                    <span>Design a modern landing page</span>
+                    <button class="chat-delete">×</button>
+                </div>
+                <div class="chat-item">
+                    <span>Build a React component</span>
+                    <button class="chat-delete">×</button>
+                </div>
+                <div class="chat-item">
+                    <span>Create email template</span>
+                    <button class="chat-delete">×</button>
+                </div>
+                <div class="chat-item">
+                    <span>Fix CSS animations</span>
+                    <button class="chat-delete">×</button>
+                </div>
+                <div class="divider"></div>
+                <div class="chat-item">
+                    <span>Dark mode toggle</span>
+                    <button class="chat-delete">×</button>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="sidebar-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Feedback
+                </button>
+                <button class="sidebar-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="19" cy="12" r="1"></circle>
+                        <circle cx="5" cy="12" r="1"></circle>
+                    </svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-main">
+            <!-- Chat Messages -->
+            <div class="messages-container">
+                <div class="welcome-section">
+                    <h1 class="welcome-title">Welcome to Aria</h1>
+                    <p class="welcome-subtitle">Your creative AI design assistant</p>
+                    <div class="suggestions">
+                        <button class="suggestion-card" data-prompt="Design a modern landing page with animations">
+                            <span class="suggestion-icon">✨</span>
+                            <span>Design a modern landing page</span>
+                        </button>
+                        <button class="suggestion-card" data-prompt="Build a React component with hooks">
+                            <span class="suggestion-icon">⚛️</span>
+                            <span>Build a React component</span>
+                        </button>
+                        <button class="suggestion-card" data-prompt="Create an email template design">
+                            <span class="suggestion-icon">📧</span>
+                            <span>Create an email template</span>
+                        </button>
+                        <button class="suggestion-card" data-prompt="Fix CSS animation performance">
+                            <span class="suggestion-icon">🎨</span>
+                            <span>Fix CSS animations</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="messages" id="messages"></div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        class="message-input" 
+                        placeholder="Ask me anything..." 
+                        id="messageInput"
+                    >
+                    <button class="send-btn" id="sendBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <p class="input-hint">Aria can make mistakes. Consider checking important information.</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

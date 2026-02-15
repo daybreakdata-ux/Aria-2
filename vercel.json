@@ -1,0 +1,27 @@
+{
+  "name": "aria-chat",
+  "version": 2,
+  "buildCommand": "npm install",
+  "env": {
+    "GROQ_API_KEY": {
+      "description": "API key for Groq - get from https://console.groq.com/keys",
+      "required": true
+    },
+    "GROQ_MODEL": {
+      "description": "Groq model to use (default: mixtral-8x7b-32768)",
+      "default": "mixtral-8x7b-32768"
+    }
+  },
+  "functions": {
+    "api/chat.js": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "$1"
+    }
+  ]
+}
