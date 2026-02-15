@@ -334,6 +334,72 @@ body {
     white-space: pre-wrap;
 }
 
+.message-content p {
+    margin: 0 0 10px;
+}
+
+.message-content h1,
+.message-content h2,
+.message-content h3,
+.message-content h4,
+.message-content h5,
+.message-content h6 {
+    margin: 12px 0 8px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.message-content h1 { font-size: 22px; }
+.message-content h2 { font-size: 20px; }
+.message-content h3 { font-size: 18px; }
+.message-content h4 { font-size: 16px; }
+
+.message-content ul,
+.message-content ol {
+    margin: 8px 0 10px 18px;
+    padding-left: 12px;
+}
+
+.message-content li {
+    margin: 4px 0;
+}
+
+.message-content code {
+    font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.message-content pre {
+    margin: 12px 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(8, 12, 20, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-x: auto;
+}
+
+.message-content pre code {
+    background: transparent;
+    padding: 0;
+    font-size: 13px;
+}
+
+.message-content a {
+    color: var(--accent-strong);
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
+}
+
+.md-spacer {
+    height: 8px;
+}
+
 .message-actions {
     display: flex;
     flex-wrap: wrap;

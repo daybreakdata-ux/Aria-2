@@ -163,6 +163,170 @@ export default function ChatInterface() {
     }
   };
 
+  const renderInline = (text, keyPrefix) => {
+    const patterns = [
+      {
+        regex: /`([^`]+)`/,
+        render: (match, key) => <code key={key}>{match[1]}</code>
+      },
+      {
+        regex: /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/,
+        render: (match, key) => (
+          <a key={key} href={match[2]} target="_blank" rel="noreferrer">
+            {match[1]}
+          </a>
+        )
+      },
+      {
+        regex: /\*\*([^*]+)\*\*/,
+        render: (match, key) => <strong key={key}>{match[1]}</strong>
+      },
+      {
+        regex: /\*([^*]+)\*/,
+        render: (match, key) => <em key={key}>{match[1]}</em>
+      }
+    ];
+
+    const nodes = [];
+    let cursor = 0;
+    let tokenIndex = 0;
+
+    while (cursor < text.length) {
+      let earliest = null;
+      let earliestPattern = null;
+
+      patterns.forEach((pattern) => {
+        const match = pattern.regex.exec(text.slice(cursor));
+        if (!match) {
+          return;
+        }
+        const index = match.index + cursor;
+        if (!earliest || index < earliest.index) {
+          earliest = { match, index };
+          earliestPattern = pattern;
+        }
+      });
+
+      if (!earliest) {
+        nodes.push(text.slice(cursor));
+        break;
+      }
+
+      if (earliest.index > cursor) {
+        nodes.push(text.slice(cursor, earliest.index));
+      }
+
+      nodes.push(earliestPattern.render(earliest.match, `${keyPrefix}-${tokenIndex}`));
+      tokenIndex += 1;
+      cursor = earliest.index + earliest.match[0].length;
+    }
+
+    return nodes;
+  };
+
+  const renderMarkdown = (content) => {
+    const segments = content.split('```');
+    const blocks = [];
+
+    segments.forEach((segment, segmentIndex) => {
+      if (segmentIndex % 2 === 1) {
+        const lines = segment.split('\n');
+        const language = lines[0].match(/^[a-zA-Z0-9#+.-]+$/) ? lines.shift() : '';
+        const code = lines.join('\n');
+        blocks.push(
+          <pre key={`code-${segmentIndex}`} data-language={language || undefined}>
+            <code>{code}</code>
+          </pre>
+        );
+        return;
+      }
+
+      const lines = segment.split('\n');
+      let listType = null;
+      let listItems = [];
+
+      const flushList = () => {
+        if (!listType || listItems.length === 0) {
+          listItems = [];
+          listType = null;
+          return;
+        }
+
+        const list = listType === 'ol' ? (
+          <ol key={`list-${segmentIndex}-${blocks.length}`}>
+            {listItems.map((item, itemIndex) => (
+              <li key={`li-${segmentIndex}-${itemIndex}`}>{renderInline(item, `li-${segmentIndex}-${itemIndex}`)}</li>
+            ))}
+          </ol>
+        ) : (
+          <ul key={`list-${segmentIndex}-${blocks.length}`}>
+            {listItems.map((item, itemIndex) => (
+              <li key={`li-${segmentIndex}-${itemIndex}`}>{renderInline(item, `li-${segmentIndex}-${itemIndex}`)}</li>
+            ))}
+          </ul>
+        );
+
+        blocks.push(list);
+        listItems = [];
+        listType = null;
+      };
+
+      lines.forEach((line) => {
+        const trimmed = line.trim();
+
+        if (!trimmed) {
+          flushList();
+          blocks.push(<div key={`spacer-${segmentIndex}-${blocks.length}`} className="md-spacer" />);
+          return;
+        }
+
+        const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+        if (headingMatch) {
+          flushList();
+          const level = headingMatch[1].length;
+          const Heading = `h${level}`;
+          blocks.push(
+            <Heading key={`heading-${segmentIndex}-${blocks.length}`}>
+              {renderInline(headingMatch[2], `heading-${segmentIndex}-${blocks.length}`)}
+            </Heading>
+          );
+          return;
+        }
+
+        const orderedMatch = trimmed.match(/^\d+\.\s+(.*)$/);
+        if (orderedMatch) {
+          if (listType && listType !== 'ol') {
+            flushList();
+          }
+          listType = 'ol';
+          listItems.push(orderedMatch[1]);
+          return;
+        }
+
+        const unorderedMatch = trimmed.match(/^[-*]\s+(.*)$/);
+        if (unorderedMatch) {
+          if (listType && listType !== 'ul') {
+            flushList();
+          }
+          listType = 'ul';
+          listItems.push(unorderedMatch[1]);
+          return;
+        }
+
+        flushList();
+        blocks.push(
+          <p key={`p-${segmentIndex}-${blocks.length}`}>
+            {renderInline(trimmed, `p-${segmentIndex}-${blocks.length}`)}
+          </p>
+        );
+      });
+
+      flushList();
+    });
+
+    return blocks;
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
@@ -233,7 +397,7 @@ export default function ChatInterface() {
               >
                 <div className="message-bubble">
                   <span className="message-role">{message.role === 'user' ? 'You' : 'Aria-X'}</span>
-                  <div className="message-content">{message.content}</div>
+                  <div className="message-content">{renderMarkdown(message.content)}</div>
                   {message.role === 'assistant' && (() => {
                     const codeBlocks = extractCodeBlocks(message.content);
                     const imageUrls = extractImageUrls(message.content);
