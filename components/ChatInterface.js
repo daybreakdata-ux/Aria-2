@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 export default function ChatInterface() {
-  const [messages, setMessages] = useState([]);
+  const [chats, setChats] = useState([]);
+  const [activeChatId, setActiveChatId] = useState(null);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
@@ -25,6 +26,42 @@ export default function ChatInterface() {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem('aria-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    const storedChats = window.localStorage.getItem('aria-chats');
+    const storedActive = window.localStorage.getItem('aria-active-chat');
+
+    if (storedChats) {
+      try {
+        const parsed = JSON.parse(storedChats);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setChats(parsed);
+          if (storedActive && parsed.some((chat) => chat.id === storedActive)) {
+            setActiveChatId(storedActive);
+          } else {
+            setActiveChatId(parsed[0].id);
+          }
+          return;
+        }
+      } catch (error) {
+        window.localStorage.removeItem('aria-chats');
+      }
+    }
+
+    const starter = createChat('New chat');
+    setChats([starter]);
+    setActiveChatId(starter.id);
+  }, []);
+
+  useEffect(() => {
+    if (chats.length === 0) {
+      return;
+    }
+    window.localStorage.setItem('aria-chats', JSON.stringify(chats));
+    if (activeChatId) {
+      window.localStorage.setItem('aria-active-chat', activeChatId);
+    }
+  }, [chats, activeChatId]);
 
   useEffect(() => {
     let animation = null;
@@ -61,22 +98,74 @@ export default function ChatInterface() {
     };
   }, []);
 
+  const activeChat = useMemo(
+    () => chats.find((chat) => chat.id === activeChatId) || null,
+    [chats, activeChatId]
+  );
+
+  const messages = useMemo(() => activeChat?.messages ?? [], [activeChat]);
+
   const conversationHistory = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.content })),
     [messages]
   );
+
+  function createChat(title) {
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `chat-${Date.now()}`;
+    const timestamp = new Date().toISOString();
+    return {
+      id,
+      title: title || 'New chat',
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      messages: []
+    };
+  }
+
+  function deriveTitle(text) {
+    const cleaned = text.replace(/\s+/g, ' ').trim();
+    if (!cleaned) {
+      return 'New chat';
+    }
+    const words = cleaned.split(' ');
+    const short = words.slice(0, 6).join(' ');
+    return short.length > 36 ? `${short.slice(0, 33)}...` : short;
+  }
+
+  const updateActiveChat = (updater, chatId = activeChatId) => {
+    if (!chatId) {
+      return;
+    }
+    setChats((current) => current.map((chat) => {
+      if (chat.id !== chatId) {
+        return chat;
+      }
+      return updater(chat);
+    }));
+  };
 
   const sendMessage = async (overrideMessage) => {
     const message = (overrideMessage ?? input).trim();
     if (!message || isLoading) {
       return;
     }
-
-    const nextMessages = [
-      ...messages,
-      { role: 'user', content: message, timestamp: new Date().toISOString() }
-    ];
-    setMessages(nextMessages);
+    const now = new Date().toISOString();
+    if (!activeChatId || !activeChat) {
+      const fallback = createChat(deriveTitle(message));
+      fallback.messages = [{ role: 'user', content: message, timestamp: now }];
+      fallback.updatedAt = now;
+      setChats((current) => [fallback, ...current]);
+      setActiveChatId(fallback.id);
+    } else {
+      updateActiveChat((chat) => ({
+        ...chat,
+        title: chat.title === 'New chat' ? deriveTitle(message) : chat.title,
+        updatedAt: now,
+        messages: [...chat.messages, { role: 'user', content: message, timestamp: now }]
+      }));
+    }
     setInput('');
     setIsLoading(true);
 
@@ -99,14 +188,19 @@ export default function ChatInterface() {
 
       startStreaming(assistantMessage);
     } catch (error) {
-      setMessages((current) => [
-        ...current,
-        {
-          role: 'assistant',
-          content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
-          timestamp: new Date().toISOString()
-        }
-      ]);
+      const now = new Date().toISOString();
+      updateActiveChat((chat) => ({
+        ...chat,
+        updatedAt: now,
+        messages: [
+          ...chat.messages,
+          {
+            role: 'assistant',
+            content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
+            timestamp: now
+          }
+        ]
+      }));
     } finally {
       setIsLoading(false);
     }
@@ -117,39 +211,48 @@ export default function ChatInterface() {
       window.clearInterval(streamIntervalRef.current);
     }
 
-    setMessages((current) => [
-      ...current,
-      {
-        role: 'assistant',
-        content: '',
-        fullContent: fullText,
-        isStreaming: true,
-        timestamp: new Date().toISOString()
-      }
-    ]);
+    const now = new Date().toISOString();
+    updateActiveChat((chat) => ({
+      ...chat,
+      updatedAt: now,
+      messages: [
+        ...chat.messages,
+        {
+          role: 'assistant',
+          content: '',
+          fullContent: fullText,
+          isStreaming: true,
+          timestamp: now
+        }
+      ]
+    }));
     let charIndex = 0;
 
     streamIntervalRef.current = window.setInterval(() => {
       charIndex = Math.min(charIndex + 1, fullText.length);
-      setMessages((current) => {
-        const next = [...current];
-        const lastIndex = next.length - 1;
+      updateActiveChat((chat) => {
+        const nextMessages = [...chat.messages];
+        const lastIndex = nextMessages.length - 1;
         if (lastIndex < 0) {
-          return current;
+          return chat;
         }
 
-        const lastMessage = next[lastIndex];
+        const lastMessage = nextMessages[lastIndex];
         if (lastMessage.role !== 'assistant' || !lastMessage.isStreaming) {
-          return current;
+          return chat;
         }
 
-        next[lastIndex] = {
+        nextMessages[lastIndex] = {
           ...lastMessage,
           content: fullText.slice(0, charIndex),
           isStreaming: charIndex < fullText.length
         };
 
-        return next;
+        return {
+          ...chat,
+          messages: nextMessages,
+          updatedAt: new Date().toISOString()
+        };
       });
 
       if (charIndex >= fullText.length) {
@@ -165,12 +268,12 @@ export default function ChatInterface() {
       streamIntervalRef.current = null;
     }
 
-    setMessages((current) => {
-      const next = [...current];
-      for (let index = next.length - 1; index >= 0; index -= 1) {
-        const message = next[index];
+    updateActiveChat((chat) => {
+      const nextMessages = [...chat.messages];
+      for (let index = nextMessages.length - 1; index >= 0; index -= 1) {
+        const message = nextMessages[index];
         if (message?.isStreaming) {
-          next[index] = {
+          nextMessages[index] = {
             ...message,
             content: message.fullContent || message.content,
             isStreaming: false
@@ -178,7 +281,11 @@ export default function ChatInterface() {
           break;
         }
       }
-      return next;
+      return {
+        ...chat,
+        messages: nextMessages,
+        updatedAt: new Date().toISOString()
+      };
     });
   };
 
@@ -198,7 +305,9 @@ export default function ChatInterface() {
       streamIntervalRef.current = null;
     }
 
-    setMessages([]);
+    const newChat = createChat('New chat');
+    setChats((current) => [newChat, ...current]);
+    setActiveChatId(newChat.id);
     setInput('');
   };
 
@@ -457,7 +566,7 @@ export default function ChatInterface() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+  }, [messages, isLoading, activeChatId]);
 
 
   return (
@@ -478,16 +587,35 @@ export default function ChatInterface() {
             <span className="theme-switch-thumb" />
           </button>
         </div>
-        <button className="primary-action" type="button" onClick={startNewChat}>
+          <button className="primary-action" type="button" onClick={startNewChat}>
           <span className="action-icon">+</span>
           New chat
         </button>
         <div className="sidebar-section">
           <p className="section-title">Chats</p>
-          <button className="chat-row active" type="button">
-            <span className="chat-title">Current chat</span>
-            <span className="chat-meta">Just now</span>
-          </button>
+          {chats.map((chat) => (
+            <button
+              key={chat.id}
+              className={`chat-row ${chat.id === activeChatId ? 'active' : ''}`}
+              type="button"
+              onClick={() => {
+                if (chat.id === activeChatId) {
+                  return;
+                }
+                if (streamIntervalRef.current) {
+                  window.clearInterval(streamIntervalRef.current);
+                  streamIntervalRef.current = null;
+                }
+                setIsLoading(false);
+                setActiveChatId(chat.id);
+              }}
+            >
+              <span className="chat-title">{chat.title}</span>
+              <span className="chat-meta">
+                {chat.updatedAt ? new Date(chat.updatedAt).toLocaleDateString() : 'New'}
+              </span>
+            </button>
+          ))}
         </div>
         <div className="sidebar-footer">
           <button className="ghost-action" type="button" onClick={() => setIsPrivacyOpen(true)}>Privacy</button>
