@@ -1,16 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const suggestions = [
-  { icon: '✨', label: 'Design a modern landing page', prompt: 'Design a modern landing page with animations' },
-  { icon: '⚛️', label: 'Build a React component', prompt: 'Build a React component with hooks' },
-  { icon: '📧', label: 'Create an email template', prompt: 'Create an email template design' },
-  { icon: '🎨', label: 'Fix CSS animations', prompt: 'Fix CSS animation performance' }
+  { title: 'Design a modern landing page', caption: 'with subtle motion and strong hierarchy', prompt: 'Design a modern landing page with animations and bold typography.' },
+  { title: 'Build a React component', caption: 'with clean hooks and state flows', prompt: 'Build a React component with hooks and accessible patterns.' },
+  { title: 'Create an email template', caption: 'for a new product launch', prompt: 'Create an email template design for a product launch.' },
+  { title: 'Fix CSS animations', caption: 'that feel janky on scroll', prompt: 'Fix CSS animation performance on scroll-heavy pages.' }
 ];
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
 
   const conversationHistory = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.content })),
@@ -73,42 +74,151 @@ export default function ChatInterface() {
     setInput('');
   };
 
+  const onKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const extractCodeBlocks = (content) => {
+    const codeBlocks = [];
+    const regex = /```(\w+)?\n([\s\S]*?)```/g;
+    let match = null;
+
+    while ((match = regex.exec(content)) !== null) {
+      codeBlocks.push({
+        language: (match[1] || '').toLowerCase(),
+        code: match[2]
+      });
+    }
+
+    return codeBlocks;
+  };
+
+  const extractImageUrls = (content) => {
+    const regex = /https?:\/\/[^\s)"]+\.(png|jpg|jpeg|gif|webp|svg)(\?[^\s)"]*)?/gi;
+    const matches = content.match(regex) || [];
+    return Array.from(new Set(matches));
+  };
+
+  const getExtensionForLanguage = (language) => {
+    const map = {
+      javascript: 'js',
+      js: 'js',
+      typescript: 'ts',
+      ts: 'ts',
+      jsx: 'jsx',
+      tsx: 'tsx',
+      json: 'json',
+      html: 'html',
+      css: 'css',
+      md: 'md',
+      markdown: 'md',
+      sh: 'sh',
+      bash: 'sh',
+      py: 'py',
+      python: 'py',
+      go: 'go',
+      rs: 'rs',
+      rust: 'rs',
+      java: 'java',
+      c: 'c',
+      cpp: 'cpp',
+      yml: 'yml',
+      yaml: 'yml'
+    };
+
+    return map[language] || 'txt';
+  };
+
+  const formatTimestamp = () => new Date().toISOString().replace(/[:.]/g, '-');
+
+  const triggerDownload = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadText = (content, filename) => {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    triggerDownload(blob, filename);
+  };
+
+  const downloadImage = async (url, filename) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      const blob = await response.blob();
+      triggerDownload(blob, filename);
+    } catch (error) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
+
   return (
-    <div className="container">
+    <div className="app-shell">
       <aside className="sidebar">
-        <div className="sidebar-header">
-          <button className="new-chat-btn" type="button" onClick={startNewChat}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            New Chat
+        <div className="brand">
+          <span className="brand-mark">Aria</span>
+          <span className="brand-subtitle">Groq chat</span>
+        </div>
+        <button className="primary-action" type="button" onClick={startNewChat}>
+          <span className="action-icon">+</span>
+          New chat
+        </button>
+        <div className="sidebar-section">
+          <p className="section-title">Chats</p>
+          <button className="chat-row active" type="button">
+            <span className="chat-title">Current chat</span>
+            <span className="chat-meta">Just now</span>
           </button>
         </div>
-        <nav className="chat-history">
-          <div className="chat-item active">
-            <span>Current chat</span>
-          </div>
-        </nav>
+        <div className="sidebar-footer">
+          <button className="ghost-action" type="button">Help</button>
+          <button className="ghost-action" type="button">Privacy</button>
+        </div>
       </aside>
 
-      <main className="chat-main">
-        <div className="messages-container">
+      <section className="content">
+        <header className="topbar">
+          <div>
+            <p className="topbar-title">Aria Chat</p>
+            <p className="topbar-subtitle">No settings, just conversation.</p>
+          </div>
+          <div className="topbar-actions">
+            <button className="ghost-action" type="button" onClick={startNewChat}>New chat</button>
+          </div>
+        </header>
+
+        <main className="chat-area">
           {messages.length === 0 && (
-            <div className="welcome-section">
-              <h1 className="welcome-title">Welcome to Aria</h1>
-              <p className="welcome-subtitle">Your creative AI design assistant</p>
-              <div className="suggestions">
+            <div className="hero">
+              <div className="hero-badge">Welcome</div>
+              <h1 className="hero-title">Ask Aria anything.</h1>
+              <p className="hero-copy">Fast, focused answers with your Groq backend.</p>
+              <div className="hero-grid">
                 {suggestions.map((item) => (
                   <button
-                    key={item.label}
-                    className="suggestion-card"
+                    key={item.title}
+                    className="hero-card"
                     type="button"
                     onClick={() => sendMessage(item.prompt)}
                     disabled={isLoading}
                   >
-                    <span className="suggestion-icon">{item.icon}</span>
-                    <span>{item.label}</span>
+                    <p className="hero-card-title">{item.title}</p>
+                    <p className="hero-card-caption">{item.caption}</p>
                   </button>
                 ))}
               </div>
@@ -117,46 +227,94 @@ export default function ChatInterface() {
 
           <div className="messages" id="messages">
             {messages.map((message, index) => (
-              <div key={`${message.role}-${index}`} className={`message ${message.role === 'user' ? 'user' : 'assistant'}`}>
-                <div className="message-avatar">{message.role === 'user' ? 'You' : 'AI'}</div>
-                <div className="message-content">{message.content}</div>
+              <div
+                key={`${message.role}-${index}`}
+                className={`message-row ${message.role === 'user' ? 'user' : 'assistant'}`}
+              >
+                <div className="message-bubble">
+                  <span className="message-role">{message.role === 'user' ? 'You' : 'Aria'}</span>
+                  <div className="message-content">{message.content}</div>
+                  {message.role === 'assistant' && (() => {
+                    const codeBlocks = extractCodeBlocks(message.content);
+                    const imageUrls = extractImageUrls(message.content);
+                    const timestamp = formatTimestamp();
+
+                    if (codeBlocks.length === 0 && imageUrls.length === 0) {
+                      return null;
+                    }
+
+                    return (
+                      <div className="message-actions">
+                        {codeBlocks.map((block, blockIndex) => {
+                          const extension = getExtensionForLanguage(block.language);
+                          const filename = `aria-code-${index + 1}-${blockIndex + 1}-${timestamp}.${extension}`;
+                          return (
+                            <button
+                              key={`code-${blockIndex}`}
+                              className="download-btn"
+                              type="button"
+                              onClick={() => downloadText(block.code, filename)}
+                            >
+                              Download code {blockIndex + 1}
+                            </button>
+                          );
+                        })}
+                        {imageUrls.map((url, imageIndex) => {
+                          const filename = `aria-image-${index + 1}-${imageIndex + 1}-${timestamp}`;
+                          return (
+                            <button
+                              key={`image-${imageIndex}`}
+                              className="download-btn secondary"
+                              type="button"
+                              onClick={() => downloadImage(url, filename)}
+                            >
+                              Download image {imageIndex + 1}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
             ))}
 
             {isLoading && (
-              <div className="message assistant">
-                <div className="message-avatar">AI</div>
-                <div className="typing-indicator">
-                  <div className="typing-dot"></div>
-                  <div className="typing-dot"></div>
-                  <div className="typing-dot"></div>
+              <div className="message-row assistant">
+                <div className="message-bubble">
+                  <span className="message-role">Aria</span>
+                  <div className="typing">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
-        </div>
+        </main>
 
-        <div className="input-area">
-          <form className="input-wrapper" onSubmit={onSubmit}>
-            <input
-              type="text"
-              className="message-input"
-              placeholder="Ask me anything..."
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              disabled={isLoading}
-            />
-            <button className="send-btn" type="submit" disabled={isLoading || !input.trim()}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-              </svg>
-            </button>
-          </form>
-          <p className="input-hint">Aria can make mistakes. Consider checking important information.</p>
-        </div>
-      </main>
-      <div className="globe" aria-hidden="true"></div>
+        <form className="composer" onSubmit={onSubmit}>
+          <textarea
+            className="composer-input"
+            placeholder="Send a message..."
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={onKeyDown}
+            disabled={isLoading}
+            rows={1}
+          />
+          <button className="send-btn" type="submit" disabled={isLoading || !input.trim()}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </form>
+        <p className="disclaimer">Aria can make mistakes. Check important information.</p>
+      </section>
+      <div className="ambient" aria-hidden="true"></div>
     </div>
   );
 }
