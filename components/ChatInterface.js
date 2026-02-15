@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-const suggestions = [
-  { title: 'Design a modern landing page', caption: 'with subtle motion and strong hierarchy', prompt: 'Design a modern landing page with animations and bold typography.' },
-  { title: 'Build a React component', caption: 'with clean hooks and state flows', prompt: 'Build a React component with hooks and accessible patterns.' },
-  { title: 'Create an email template', caption: 'for a new product launch', prompt: 'Create an email template design for a product launch.' },
-  { title: 'Fix CSS animations', caption: 'that feel janky on scroll', prompt: 'Fix CSS animation performance on scroll-heavy pages.' }
-];
-
 export default function ChatInterface() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -372,19 +365,25 @@ export default function ChatInterface() {
               <div className="hero-badge">Welcome</div>
               <h1 className="hero-title">Ask Aria-X anything.</h1>
               <p className="hero-copy">Fast, focused answers built for your workflow.</p>
-              <div className="hero-grid">
-                {suggestions.map((item) => (
-                  <button
-                    key={item.title}
-                    className="hero-card"
-                    type="button"
-                    onClick={() => sendMessage(item.prompt)}
-                    disabled={isLoading}
-                  >
-                    <p className="hero-card-title">{item.title}</p>
-                    <p className="hero-card-caption">{item.caption}</p>
-                  </button>
-                ))}
+              <div className="aria-robot-stage" role="img" aria-label="Aria floating robot">
+                <div className="aria-robot-orbit" />
+                <div className="aria-robot-orbit orbit-secondary" />
+                <div className="aria-robot-float">
+                  <div className="aria-robot-halo" />
+                  <div className="aria-robot-body">
+                    <div className="aria-robot-antenna">
+                      <span className="aria-robot-antenna-tip" />
+                    </div>
+                    <div className="aria-robot-face">
+                      <span className="aria-robot-eye left" />
+                      <span className="aria-robot-eye right" />
+                      <span className="aria-robot-mouth" />
+                    </div>
+                    <div className="aria-robot-name">Aria</div>
+                  </div>
+                  <div className="aria-robot-arm left" />
+                  <div className="aria-robot-arm right" />
+                </div>
               </div>
             </div>
           )}
