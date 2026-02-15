@@ -52,6 +52,7 @@ cp .env.example .env.local
 ```env
 GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
+CHAT_PROMPT=You are Aria, a helpful and creative AI design assistant.
 ```
 
 4. Start dev server:
@@ -98,4 +99,4 @@ npm run start
 ## Deploy
 
 Configured for Vercel with Next.js framework in `vercel.json`.
-Set `GROQ_API_KEY` and `GROQ_MODEL` in Vercel environment variables.
+Set `GROQ_API_KEY`, `GROQ_MODEL`, and optional `CHAT_PROMPT` in Vercel environment variables.

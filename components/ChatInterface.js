@@ -156,6 +156,7 @@ export default function ChatInterface() {
           <p className="input-hint">Aria can make mistakes. Consider checking important information.</p>
         </div>
       </main>
+      <div className="globe" aria-hidden="true"></div>
     </div>
   );
 }

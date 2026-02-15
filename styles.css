@@ -5,34 +5,43 @@
 }
 
 :root {
-    --bg-primary: #0f0f0f;
-    --bg-secondary: #1a1a1a;
-    --bg-tertiary: #2a2a2a;
-    --text-primary: #ffffff;
-    --text-secondary: #b4b4b4;
-    --border-color: #3a3a3a;
-    --accent-color: #10a37f;
-    --accent-hover: #1fb981;
-    --user-bg: #10a37f;
-    --assistant-bg: #1a1a1a;
+    --bg-primary: #0b0f14;
+    --bg-secondary: #141a22;
+    --bg-tertiary: #1d2633;
+    --text-primary: #f2f7ff;
+    --text-secondary: #9aa7b6;
+    --border-color: #2b3646;
+    --accent-color: #2ce3b7;
+    --accent-hover: #55f0c9;
+    --user-bg: #2ce3b7;
+    --assistant-bg: #121923;
+    --globe-color: #38f5ff;
+    --globe-shadow: rgba(56, 245, 255, 0.35);
 }
 
 html, body {
     height: 100%;
     width: 100%;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
     background-color: var(--bg-primary);
     color: var(--text-primary);
 }
 
 body {
     overflow: hidden;
+    background-image:
+        radial-gradient(circle at 15% 10%, rgba(44, 227, 183, 0.15), transparent 45%),
+        radial-gradient(circle at 85% 20%, rgba(56, 245, 255, 0.12), transparent 50%),
+        linear-gradient(135deg, #0a0f15 0%, #0b111b 40%, #0b0f14 100%);
+    background-attachment: fixed;
 }
 
 .container {
     display: flex;
     height: 100vh;
     width: 100%;
+    position: relative;
+    isolation: isolate;
 }
 
 /* Sidebar */
@@ -43,6 +52,8 @@ body {
     display: flex;
     flex-direction: column;
     animation: slideInLeft 0.3s ease-out;
+    position: relative;
+    z-index: 2;
 }
 
 @keyframes slideInLeft {
@@ -197,6 +208,8 @@ body {
     display: flex;
     flex-direction: column;
     background-color: var(--bg-primary);
+    position: relative;
+    z-index: 2;
 }
 
 .messages-container {
@@ -206,6 +219,7 @@ body {
     flex-direction: column;
     padding: 20px;
     animation: fadeIn 0.3s ease-out;
+    backdrop-filter: blur(1px);
 }
 
 @keyframes fadeIn {
@@ -248,6 +262,7 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     animation: glideDown 0.6s ease-out;
+    letter-spacing: -0.02em;
 }
 
 @keyframes glideDown {
@@ -359,7 +374,7 @@ body {
     max-width: 70%;
     word-wrap: break-word;
     line-height: 1.5;
-    font-size: 14px;
+    font-size: 15px;
     animation: messageFadeIn 0.3s ease-out;
 }
 
@@ -542,6 +557,82 @@ body {
     text-align: center;
 }
 
+.globe {
+    position: fixed;
+    right: -40px;
+    bottom: -40px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    border: 2px solid var(--globe-color);
+    opacity: 0.7;
+    box-shadow: 0 0 40px var(--globe-shadow);
+    pointer-events: none;
+    z-index: 1;
+    animation: globeSpin 26s linear infinite;
+    background: radial-gradient(circle at 35% 35%, rgba(56, 245, 255, 0.2), transparent 55%);
+}
+
+.globe::before,
+.globe::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(56, 245, 255, 0.45);
+}
+
+.globe::before {
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(56, 245, 255, 0.25),
+        rgba(56, 245, 255, 0.25) 1px,
+        transparent 1px,
+        transparent 14px
+    );
+    opacity: 0.8;
+    animation: globeDrift 14s linear infinite;
+}
+
+.globe::after {
+    background: repeating-linear-gradient(
+        to right,
+        rgba(56, 245, 255, 0.35),
+        rgba(56, 245, 255, 0.35) 1px,
+        transparent 1px,
+        transparent 18px
+    );
+    opacity: 0.6;
+    animation: globeDriftReverse 18s linear infinite;
+}
+
+@keyframes globeSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes globeDrift {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes globeDriftReverse {
+    from {
+        transform: rotate(360deg);
+    }
+    to {
+        transform: rotate(0deg);
+    }
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
     width: 8px;
@@ -576,6 +667,13 @@ body {
 
     .welcome-title {
         font-size: 28px;
+    }
+
+    .globe {
+        width: 200px;
+        height: 200px;
+        right: -30px;
+        bottom: -30px;
     }
 }
 
@@ -627,5 +725,12 @@ body {
 
     .suggestions {
         flex-direction: column;
+    }
+
+    .globe {
+        width: 160px;
+        height: 160px;
+        right: -20px;
+        bottom: -20px;
     }
 }

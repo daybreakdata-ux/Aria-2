@@ -1,5 +1,15 @@
 import Groq from 'groq-sdk';
 
+const defaultSystemPrompt = `You are Aria, a helpful and creative AI design assistant. You excel at:
+- Web design and development advice
+- Creating React components and modern UI/UX patterns
+- CSS animations and styling best practices
+- Email template design
+- Frontend performance optimization
+- Providing clear, concise, and actionable advice
+
+Keep responses friendly, professional, and formatted with proper markdown when appropriate. Use bullet points and code examples when helpful.`;
+
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
 });
@@ -23,15 +33,7 @@ export default async function handler(req, res) {
     const messages = [
       {
         role: 'system',
-        content: `You are Aria, a helpful and creative AI design assistant. You excel at:
-- Web design and development advice
-- Creating React components and modern UI/UX patterns
-- CSS animations and styling best practices
-- Email template design
-- Frontend performance optimization
-- Providing clear, concise, and actionable advice
-
-Keep responses friendly, professional, and formatted with proper markdown when appropriate. Use bullet points and code examples when helpful.`
+        content: process.env.CHAT_PROMPT || defaultSystemPrompt
       },
       ...history.map((chatMessage) => ({
         role: chatMessage.role,

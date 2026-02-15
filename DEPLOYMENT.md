@@ -17,6 +17,7 @@ Edit `.env.local` with your Groq API key:
 ```env
 GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
+CHAT_PROMPT=You are Aria, a helpful and creative AI design assistant.
 ```
 
 ### 3. Run Development Server
@@ -78,6 +79,7 @@ git push -u origin main
    |------|-------|-------------|
    | `GROQ_API_KEY` | Your Groq API key | Production, Preview, Development |
    | `GROQ_MODEL` | `llama-3.3-70b-versatile` | Production, Preview, Development |
+   | `CHAT_PROMPT` | Custom system prompt | Production, Preview, Development |
 
 4. **Deploy**:
    - Click "Deploy"
@@ -91,6 +93,7 @@ git push -u origin main
 
 - **GROQ_API_KEY**: Your Groq API key from [console.groq.com](https://console.groq.com)
 - **GROQ_MODEL**: The AI model to use (default: `llama-3.3-70b-versatile`)
+- **CHAT_PROMPT**: Optional system prompt override for Aria
 
 ### Available Groq Models
 
