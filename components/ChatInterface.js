@@ -94,6 +94,13 @@ export default function ChatInterface() {
     }
   }, [chats, activeChatId]);
 
+  const activeChat = useMemo(
+    () => chats.find((chat) => chat.id === activeChatId) || null,
+    [chats, activeChatId]
+  );
+
+  const messages = useMemo(() => activeChat?.messages ?? [], [activeChat]);
+
   useEffect(() => {
     let animation = null;
 
@@ -128,13 +135,6 @@ export default function ChatInterface() {
       }
     };
   }, []);
-
-  const activeChat = useMemo(
-    () => chats.find((chat) => chat.id === activeChatId) || null,
-    [chats, activeChatId]
-  );
-
-  const messages = useMemo(() => activeChat?.messages ?? [], [activeChat]);
 
   const conversationHistory = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.content })),
