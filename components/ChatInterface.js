@@ -34,7 +34,7 @@ export default function ChatInterface() {
       return undefined;
     }
 
-    const media = window.matchMedia('(max-width: 960px) and (orientation: portrait)');
+    const media = window.matchMedia('(max-width: 960px)');
 
     const syncLayout = () => {
       setIsMobilePortrait(media.matches);
@@ -661,6 +661,23 @@ export default function ChatInterface() {
         </div>
       </aside>
 
+      {isMobilePortrait && (
+        <button
+          className="mobile-menu-button"
+          type="button"
+          onClick={toggleSidebar}
+          aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
+          aria-controls="sidebar"
+          aria-expanded={isSidebarOpen}
+        >
+          <span className="icon-lines" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+      )}
+
       {isMobilePortrait && isSidebarOpen && (
         <button
           className="sidebar-overlay"
@@ -671,31 +688,6 @@ export default function ChatInterface() {
       )}
 
       <section className="content">
-        <header className="topbar">
-          <div className="topbar-title-group">
-            <span className="topbar-title">Aria-X</span>
-            <span className="topbar-subtitle">Creative AI assistant</span>
-          </div>
-          <div className="topbar-actions">
-            <button
-              className="icon-button menu-toggle"
-              type="button"
-              onClick={toggleSidebar}
-              aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
-              aria-controls="sidebar"
-              aria-expanded={isSidebarOpen}
-            >
-              <span className="icon-lines" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </span>
-            </button>
-            <button className="icon-button" type="button" onClick={startNewChat} aria-label="New chat">
-              <span className="action-icon">+</span>
-            </button>
-          </div>
-        </header>
         <main className="chat-area">
           {messages.length === 0 && (
             <div className="hero">
