@@ -171,8 +171,8 @@ export default function ChatInterface() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <span className="brand-mark">Aria</span>
-          <span className="brand-subtitle">Groq chat</span>
+          <span className="brand-mark">Aria-X</span>
+          <span className="brand-subtitle">AI chat</span>
         </div>
         <button className="primary-action" type="button" onClick={startNewChat}>
           <span className="action-icon">+</span>
@@ -194,7 +194,7 @@ export default function ChatInterface() {
       <section className="content">
         <header className="topbar">
           <div>
-            <p className="topbar-title">Aria Chat</p>
+            <p className="topbar-title">Aria-X Chat</p>
             <p className="topbar-subtitle">No settings, just conversation.</p>
           </div>
           <div className="topbar-actions">
@@ -206,8 +206,8 @@ export default function ChatInterface() {
           {messages.length === 0 && (
             <div className="hero">
               <div className="hero-badge">Welcome</div>
-              <h1 className="hero-title">Ask Aria anything.</h1>
-              <p className="hero-copy">Fast, focused answers with your Groq backend.</p>
+              <h1 className="hero-title">Ask Aria-X anything.</h1>
+              <p className="hero-copy">Fast, focused answers built for your workflow.</p>
               <div className="hero-grid">
                 {suggestions.map((item) => (
                   <button
@@ -232,7 +232,7 @@ export default function ChatInterface() {
                 className={`message-row ${message.role === 'user' ? 'user' : 'assistant'}`}
               >
                 <div className="message-bubble">
-                  <span className="message-role">{message.role === 'user' ? 'You' : 'Aria'}</span>
+                  <span className="message-role">{message.role === 'user' ? 'You' : 'Aria-X'}</span>
                   <div className="message-content">{message.content}</div>
                   {message.role === 'assistant' && (() => {
                     const codeBlocks = extractCodeBlocks(message.content);
@@ -247,7 +247,7 @@ export default function ChatInterface() {
                       <div className="message-actions">
                         {codeBlocks.map((block, blockIndex) => {
                           const extension = getExtensionForLanguage(block.language);
-                          const filename = `aria-code-${index + 1}-${blockIndex + 1}-${timestamp}.${extension}`;
+                          const filename = `aria-x-code-${index + 1}-${blockIndex + 1}-${timestamp}.${extension}`;
                           return (
                             <button
                               key={`code-${blockIndex}`}
@@ -260,7 +260,7 @@ export default function ChatInterface() {
                           );
                         })}
                         {imageUrls.map((url, imageIndex) => {
-                          const filename = `aria-image-${index + 1}-${imageIndex + 1}-${timestamp}`;
+                          const filename = `aria-x-image-${index + 1}-${imageIndex + 1}-${timestamp}`;
                           return (
                             <button
                               key={`image-${imageIndex}`}
@@ -282,7 +282,7 @@ export default function ChatInterface() {
             {isLoading && (
               <div className="message-row assistant">
                 <div className="message-bubble">
-                  <span className="message-role">Aria</span>
+                  <span className="message-role">Aria-X</span>
                   <div className="typing">
                     <span></span>
                     <span></span>
@@ -312,7 +312,8 @@ export default function ChatInterface() {
             </svg>
           </button>
         </form>
-        <p className="disclaimer">Aria can make mistakes. Check important information.</p>
+        <p className="disclaimer">Aria-X can make mistakes. Check important information.</p>
+        <p className="footer-note">Copyright Daybreak Digital 2026</p>
       </section>
       <div className="ambient" aria-hidden="true"></div>
     </div>
