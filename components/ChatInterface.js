@@ -119,7 +119,7 @@ export default function ChatInterface() {
         animation.destroy();
       }
     };
-  }, []);
+  }, [messages.length]);
 
   useEffect(() => {
     return () => {
