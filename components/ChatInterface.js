@@ -5,6 +5,34 @@ export default function ChatInterface() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const lottieRef = useRef(null);
+
+  useEffect(() => {
+    let animation = null;
+
+    const loadAnimation = async () => {
+      if (!lottieRef.current) {
+        return;
+      }
+
+      const lottie = (await import('lottie-web')).default;
+      animation = lottie.loadAnimation({
+        container: lottieRef.current,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://gcore.jsdelivr.net/gh/AI-QL/chat-ui/lottie.json'
+      });
+    };
+
+    loadAnimation();
+
+    return () => {
+      if (animation) {
+        animation.destroy();
+      }
+    };
+  }, []);
 
   const conversationHistory = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.content })),
@@ -365,25 +393,9 @@ export default function ChatInterface() {
               <div className="hero-badge">Welcome</div>
               <h1 className="hero-title">Ask Aria-X anything.</h1>
               <p className="hero-copy">Fast, focused answers built for your workflow.</p>
-              <div className="aria-robot-stage" role="img" aria-label="Aria floating robot">
-                <div className="aria-robot-orbit" />
-                <div className="aria-robot-orbit orbit-secondary" />
-                <div className="aria-robot-float">
-                  <div className="aria-robot-halo" />
-                  <div className="aria-robot-body">
-                    <div className="aria-robot-antenna">
-                      <span className="aria-robot-antenna-tip" />
-                    </div>
-                    <div className="aria-robot-face">
-                      <span className="aria-robot-eye left" />
-                      <span className="aria-robot-eye right" />
-                      <span className="aria-robot-mouth" />
-                    </div>
-                    <div className="aria-robot-name">Aria</div>
-                  </div>
-                  <div className="aria-robot-arm left" />
-                  <div className="aria-robot-arm right" />
-                </div>
+              <div className="aria-lottie-stage" role="img" aria-label="Aria floating robot">
+                <div className="aria-lottie" ref={lottieRef} />
+                <div className="aria-lottie-label">Aria</div>
               </div>
             </div>
           )}
