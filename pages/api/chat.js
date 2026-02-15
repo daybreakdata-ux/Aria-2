@@ -30,10 +30,16 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
+    const systemPrompt =
+      process.env.CHAT_PROMPT ||
+      process.env.SYSTEM_PROMPT ||
+      process.env.GROQ_SYSTEM_PROMPT ||
+      defaultSystemPrompt;
+
     const messages = [
       {
         role: 'system',
-        content: process.env.CHAT_PROMPT || defaultSystemPrompt
+        content: systemPrompt
       },
       ...history.map((chatMessage) => ({
         role: chatMessage.role,

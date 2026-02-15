@@ -4,8 +4,26 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [theme, setTheme] = useState('dark');
   const messagesEndRef = useRef(null);
   const lottieRef = useRef(null);
+
+  useEffect(() => {
+    const storedTheme = window.localStorage.getItem('aria-theme');
+    if (storedTheme) {
+      setTheme(storedTheme);
+      return;
+    }
+
+    const prefersLight = window.matchMedia?.('(prefers-color-scheme: light)').matches;
+    setTheme(prefersLight ? 'light' : 'dark');
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem('aria-theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     let animation = null;
@@ -355,9 +373,20 @@ export default function ChatInterface() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">
-          <span className="brand-mark">Aria-X</span>
-          <span className="brand-subtitle">AI chat</span>
+        <div className="sidebar-header">
+          <div className="brand">
+            <span className="brand-mark">Aria-X</span>
+            <span className="brand-subtitle">AI chat</span>
+          </div>
+          <button
+            className="theme-switch"
+            type="button"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            aria-pressed={theme === 'light'}
+            aria-label="Toggle light mode"
+          >
+            <span className="theme-switch-thumb" />
+          </button>
         </div>
         <button className="primary-action" type="button" onClick={startNewChat}>
           <span className="action-icon">+</span>
@@ -371,22 +400,11 @@ export default function ChatInterface() {
           </button>
         </div>
         <div className="sidebar-footer">
-          <button className="ghost-action" type="button">Help</button>
-          <button className="ghost-action" type="button">Privacy</button>
+          <button className="ghost-action" type="button" onClick={() => setIsPrivacyOpen(true)}>Privacy</button>
         </div>
       </aside>
 
       <section className="content">
-        <header className="topbar">
-          <div>
-            <p className="topbar-title">Aria-X Chat</p>
-            <p className="topbar-subtitle">No settings, just conversation.</p>
-          </div>
-          <div className="topbar-actions">
-            <button className="ghost-action" type="button" onClick={startNewChat}>New chat</button>
-          </div>
-        </header>
-
         <main className="chat-area">
           {messages.length === 0 && (
             <div className="hero">
@@ -490,6 +508,42 @@ export default function ChatInterface() {
         <p className="disclaimer">Aria-X can make mistakes. Check important information.</p>
         <p className="footer-note">Copyright Daybreak Digital 2026</p>
       </section>
+      {isPrivacyOpen && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Privacy notice"
+          onClick={() => setIsPrivacyOpen(false)}
+        >
+          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Privacy</h2>
+              <button
+                className="modal-close"
+                type="button"
+                onClick={() => setIsPrivacyOpen(false)}
+                aria-label="Close privacy notice"
+              >
+                ×
+              </button>
+            </div>
+            <p>
+              We do not collect personal information or store your chat content. Messages are used only to provide
+              responses in the moment and are not retained after your session ends.
+            </p>
+            <p>
+              If you share sensitive information, please do so only when necessary. You are always in control of what
+              you submit.
+            </p>
+            <div className="modal-actions">
+              <button className="primary-action" type="button" onClick={() => setIsPrivacyOpen(false)}>
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="ambient" aria-hidden="true"></div>
     </div>
   );
