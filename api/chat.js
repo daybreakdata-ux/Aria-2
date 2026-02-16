@@ -90,13 +90,19 @@ export default async function handler(req, res) {
         role: 'system',
         content: systemPrompt
       },
+      ...(searchContext
+        ? [{
+          role: 'system',
+          content: `WEB SEARCH RESULTS\n\n${searchContext}\n\nUse these results to answer the user with up-to-date information.`
+        }]
+        : []),
       ...history.map(msg => ({
         role: msg.role,
         content: msg.content
       })),
       {
         role: 'user',
-        content: message + searchContext
+        content: message
       }
     ];
 
@@ -130,8 +136,12 @@ export default async function handler(req, res) {
             content: msg.content
           })),
           {
+            role: 'system',
+            content: `WEB SEARCH RESULTS\n\n${formatSearchResults(searchResults)}\n\nUse these results to answer the user with up-to-date information.`
+          },
+          {
             role: 'user',
-            content: message + '\n\n' + formatSearchResults(searchResults) + '\n\nPlease use the above search results to provide an accurate answer.'
+            content: message
           }
         ];
         
