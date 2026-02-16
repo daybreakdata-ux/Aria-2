@@ -58,9 +58,11 @@ export default async function handler(req, res) {
     let shouldSearch = enableSearch && (shouldPerformWebSearch(message) || isBusinessQuery(message));
     
     if (shouldSearch) {
+      let searchQuery = null;
+      let isBusiness = false;
       try {
-        const searchQuery = extractSearchQuery(message);
-        const isBusiness = isBusinessQuery(message);
+        searchQuery = extractSearchQuery(message);
+        isBusiness = isBusinessQuery(message);
         // Business queries get more results for hours, location, contact info
         const maxResults = isBusiness ? 8 : 5;
         const searchResults = await searchWeb(searchQuery, { maxResults, timeout: 5000 });
@@ -72,7 +74,12 @@ export default async function handler(req, res) {
           trigger: isBusiness ? 'business' : 'explicit'
         };
       } catch (error) {
-        console.error('Search error:', error.message);
+        console.error('Search error:', {
+          message: error.message,
+          query: searchQuery,
+          isBusiness,
+          enableSearch
+        });
         searchContext = '\n\n[Note: Web search was attempted but failed. Please answer based on your existing knowledge and indicate if you lack current information.]';
       }
     }
@@ -145,7 +152,10 @@ export default async function handler(req, res) {
           trigger: 'uncertainty'
         };
       } catch (error) {
-        console.error('Retry search error:', error.message);
+        console.error('Retry search error:', {
+          message: error.message,
+          enableSearch
+        });
         // Keep original uncertain response
       }
     }
@@ -164,7 +174,10 @@ export default async function handler(req, res) {
     return res.status(200).json(response);
 
   } catch (error) {
-    console.error('Error calling Groq API:', error);
+    console.error('Error calling Groq API:', {
+      message: error.message,
+      stack: error.stack
+    });
     
     return res.status(500).json({
       success: false,
