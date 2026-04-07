@@ -688,6 +688,13 @@ export default function ChatInterface() {
       )}
 
       <section className="content">
+        <header className="app-header">
+          <div className="app-header-copy">
+            <div className="app-header-title">Aria-X</div>
+            <p className="app-header-subtitle">Your creative AI chat assistant</p>
+          </div>
+        </header>
+
         <main className="chat-area">
           {messages.length === 0 && (
             <div className="hero">

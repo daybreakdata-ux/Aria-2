@@ -336,6 +336,33 @@ html[data-theme="light"] .theme-switch-thumb {
     overflow: hidden;
 }
 
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    padding-bottom: 16px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.app-header-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.app-header-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.app-header-subtitle {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
 
 .chat-area {
     flex: 1;
