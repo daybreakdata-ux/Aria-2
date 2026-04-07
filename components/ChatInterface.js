@@ -373,6 +373,12 @@ export default function ChatInterface() {
     return Array.from(new Set(matches));
   };
 
+  const isHtmlContent = (content) => {
+    // Check if content looks like HTML (contains HTML tags)
+    const htmlRegex = /<\/?[a-zA-Z][^>]*>/;
+    return htmlRegex.test(content) && content.length > 50; // Minimum length to avoid false positives
+  };
+
   const getExtensionForLanguage = (language) => {
     const map = {
       javascript: 'js',
@@ -734,9 +740,10 @@ export default function ChatInterface() {
                     }
                     const codeBlocks = extractCodeBlocks(message.content);
                     const imageUrls = extractImageUrls(message.content);
+                    const isHtml = isHtmlContent(message.content);
                     const timestamp = formatTimestamp();
 
-                    if (codeBlocks.length === 0 && imageUrls.length === 0) {
+                    if (codeBlocks.length === 0 && imageUrls.length === 0 && !isHtml) {
                       return null;
                     }
 
@@ -756,6 +763,15 @@ export default function ChatInterface() {
                             </button>
                           );
                         })}
+                        {isHtml && codeBlocks.length === 0 && (
+                          <button
+                            className="download-btn"
+                            type="button"
+                            onClick={() => downloadText(message.content, `aria-x-html-${index + 1}-${timestamp}.html`)}
+                          >
+                            Download HTML
+                          </button>
+                        )}
                         {imageUrls.map((url, imageIndex) => {
                           const filename = `aria-x-image-${index + 1}-${imageIndex + 1}-${timestamp}`;
                           return (

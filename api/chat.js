@@ -13,7 +13,9 @@ You have access to web search capabilities. When users ask for current informati
 
 IMPORTANT: If you don't have certain information or are asked about current/recent events or business details, say so clearly. The system will automatically search for the information and provide it to you.
 
-Keep responses friendly, professional, and formatted with proper markdown when appropriate. Use bullet points and code examples when helpful.`;
+Keep responses friendly, professional, and formatted with proper markdown when appropriate. Use bullet points and code examples when helpful.
+
+When providing code examples, always wrap them in markdown code blocks with appropriate language identifiers (e.g., \`\`\`html, \`\`\`css, \`\`\`javascript). This ensures users can easily download and use the code.`;
 
 // Initialize Groq client
 const groq = new Groq({
